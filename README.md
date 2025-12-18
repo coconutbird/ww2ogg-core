@@ -133,5 +133,6 @@ This project is licensed under the BSD-3-Clause License - see the [LICENSE](LICE
 
 ## Credits
 
-This is a .NET port of [ww2ogg](https://github.com/hcs64/ww2ogg) by Adam Gashlin (hcs), which includes code derived from the Xiph.org Foundation's reference Vorbis implementation.
+This is a .NET port of [ww2ogg](https://github.com/hcs64/ww2ogg) by Adam Gashlin (hcs), which includes code derived from
+the Xiph.org Foundation's reference Vorbis implementation.
 

@@ -2,16 +2,49 @@ using Ww2Ogg.Core.Internal;
 
 namespace Ww2Ogg.Core;
 
+/// <summary>
+///     Specifies how to handle Wwise modified Vorbis packet format.
+/// </summary>
 public enum ForcePacketFormat
 {
+    /// <summary>
+    ///     Automatically detect packet format from the file header.
+    /// </summary>
     NoForce,
+
+    /// <summary>
+    ///     Force interpretation as modified Wwise packets (removes packet type bit, adds window flags for long blocks).
+    /// </summary>
     ForceModPackets,
+
+    /// <summary>
+    ///     Force interpretation as standard Vorbis packets (no modification).
+    /// </summary>
     ForceNoModPackets
 }
 
 /// <summary>
-///     Converts Wwise RIFF/RIFX Vorbis to standard Ogg Vorbis
+///     Converts Wwise RIFF/RIFX Vorbis audio files (.wem) to standard Ogg Vorbis format.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This class parses Wwise audio containers and reconstructs valid Ogg Vorbis streams
+///         by rebuilding the Vorbis headers and converting the audio packets.
+///     </para>
+///     <para>
+///         Wwise uses a modified Vorbis format that strips certain header information and
+///         uses external codebook libraries. This converter reconstructs the missing data
+///         using the provided <see cref="CodebookLibrary" />.
+///     </para>
+/// </remarks>
+/// <example>
+///     <code>
+/// using var input = File.OpenRead("audio.wem");
+/// using var output = new MemoryStream();
+/// var converter = new WwiseRiffVorbis(input, CodebookLibrary.Default);
+/// converter.GenerateOgg(output);
+/// </code>
+/// </example>
 public sealed class WwiseRiffVorbis
 {
     private const string Version = "0.24";
@@ -59,6 +92,32 @@ public sealed class WwiseRiffVorbis
     private uint _subtype;
     private uint _uid;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="WwiseRiffVorbis" /> class and parses the input stream.
+    /// </summary>
+    /// <param name="inputStream">
+    ///     A seekable stream containing the Wwise RIFF/RIFX Vorbis data (.wem file).
+    ///     The stream must support seeking and will be read from the beginning.
+    /// </param>
+    /// <param name="codebooks">
+    ///     The codebook library to use for rebuilding Vorbis codebooks.
+    ///     Use <see cref="CodebookLibrary.Default" /> or <see cref="CodebookLibrary.AoTuV" /> for built-in codebooks,
+    ///     or load a custom codebook file.
+    /// </param>
+    /// <param name="inlineCodebooks">
+    ///     If <c>true</c>, codebooks are read from the input stream rather than the codebook library.
+    ///     Use this for files that contain their own codebook data.
+    /// </param>
+    /// <param name="fullSetup">
+    ///     If <c>true</c>, the setup packet is copied verbatim from the input.
+    ///     Use this for files with non-standard setup data.
+    /// </param>
+    /// <param name="forcePacketFormat">
+    ///     Specifies how to handle Wwise modified packet format.
+    ///     Use <see cref="ForcePacketFormat.NoForce" /> for automatic detection.
+    /// </param>
+    /// <exception cref="ParseException">Thrown when the input stream contains invalid or unsupported data.</exception>
+    /// <exception cref="InvalidCodebookIdException">Thrown when a codebook ID is not found in the library.</exception>
     public WwiseRiffVorbis(
         Stream inputStream,
         CodebookLibrary codebooks,
@@ -118,6 +177,23 @@ public sealed class WwiseRiffVorbis
         ValidateLoops();
     }
 
+    /// <summary>
+    ///     Generates a standard Ogg Vorbis stream from the parsed Wwise audio data.
+    /// </summary>
+    /// <param name="outputStream">
+    ///     The stream to write the Ogg Vorbis data to. The stream must be writable.
+    /// </param>
+    /// <exception cref="ParseException">Thrown when audio packet data is invalid or truncated.</exception>
+    /// <remarks>
+    ///     <para>
+    ///         This method writes a complete Ogg Vorbis stream including identification header,
+    ///         comment header (with loop points if present), setup header, and all audio packets.
+    ///     </para>
+    ///     <para>
+    ///         The output stream position is not reset after writing. The caller is responsible
+    ///         for seeking if needed.
+    ///     </para>
+    /// </remarks>
     public void GenerateOgg(Stream outputStream)
     {
         using var ogg = new BitOggStream(outputStream);

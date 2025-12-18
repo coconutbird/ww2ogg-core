@@ -6,8 +6,22 @@ using Ww2Ogg.Core.Internal;
 namespace Ww2Ogg.Core;
 
 /// <summary>
-///     Loads and rebuilds Vorbis codebooks from packed binary data
+///     Provides Vorbis codebook data for rebuilding audio streams from Wwise files.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Wwise audio files use a stripped Vorbis format that references external codebook libraries
+///         instead of embedding the full codebook data. This class loads and provides access to
+///         these codebook libraries.
+///     </para>
+///     <para>
+///         Two built-in codebook libraries are available via <see cref="Default" /> and <see cref="AoTuV" />.
+///         Custom codebook files can be loaded using the file path constructor.
+///     </para>
+///     <para>
+///         Instances are cached and thread-safe. The built-in libraries are loaded lazily on first access.
+///     </para>
+/// </remarks>
 public sealed class CodebookLibrary
 {
     private const string DefaultCodebookResource = "Ww2Ogg.Core.Internal.Codebooks.packed_codebooks.bin";
@@ -20,8 +34,12 @@ public sealed class CodebookLibrary
     private readonly int[]? _codebookOffsets;
 
     /// <summary>
-    ///     Creates an empty codebook library (for inline codebooks)
+    ///     Creates an empty codebook library for use with inline codebooks.
     /// </summary>
+    /// <remarks>
+    ///     Use this constructor when the audio file contains its own codebook data
+    ///     (i.e., when using <c>inlineCodebooks: true</c> in <see cref="WwiseRiffVorbis" />).
+    /// </remarks>
     public CodebookLibrary()
     {
         _codebookData = null;
@@ -30,8 +48,14 @@ public sealed class CodebookLibrary
     }
 
     /// <summary>
-    ///     Loads codebook library from a file
+    ///     Loads a codebook library from a file.
     /// </summary>
+    /// <param name="filename">Path to the packed codebook binary file.</param>
+    /// <exception cref="FileOpenException">Thrown when the file does not exist.</exception>
+    /// <remarks>
+    ///     The file format is the same as used by the original ww2ogg tool:
+    ///     codebook data followed by an offset table, with the table offset at the end.
+    /// </remarks>
     public CodebookLibrary(string filename)
     {
         if (!File.Exists(filename))
@@ -49,13 +73,32 @@ public sealed class CodebookLibrary
     }
 
     /// <summary>
-    ///     Gets the default packed codebooks library (cached)
+    ///     Gets the default packed codebooks library.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         This is the standard codebook library that works with most Wwise audio files.
+    ///         The library is loaded lazily and cached for subsequent access.
+    ///     </para>
+    ///     <para>
+    ///         If conversion fails with <see cref="SizeMismatchException" /> or produces garbled audio,
+    ///         try <see cref="AoTuV" /> instead.
+    ///     </para>
+    /// </remarks>
     public static CodebookLibrary Default => FromEmbeddedResource(DefaultCodebookResource);
 
     /// <summary>
-    ///     Gets the aoTuV 6.03 packed codebooks library (cached)
+    ///     Gets the aoTuV 6.03 packed codebooks library.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Some Wwise audio files are encoded with aoTuV (Aoyumi's tuned Vorbis) codebooks.
+    ///         Use this library if <see cref="Default" /> produces errors or garbled audio.
+    ///     </para>
+    ///     <para>
+    ///         The library is loaded lazily and cached for subsequent access.
+    ///     </para>
+    /// </remarks>
     public static CodebookLibrary AoTuV => FromEmbeddedResource(AoTuVCodebookResource);
 
     /// <summary>

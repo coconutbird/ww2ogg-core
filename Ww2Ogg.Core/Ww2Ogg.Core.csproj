@@ -4,6 +4,22 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <!-- NuGet Package Metadata -->
+        <PackageId>Ww2Ogg.Core</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>coconutbird</Authors>
+        <Description>Convert Wwise RIFF/RIFX Vorbis audio files (.wem) to standard Ogg Vorbis format. A .NET port of ww2ogg by hcs.</Description>
+        <PackageTags>wwise;wem;ogg;vorbis;audio;converter</PackageTags>
+        <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/coconutbird/ww2ogg-core</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/coconutbird/ww2ogg-core</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Title>ww2ogg</Title>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <LangVersion>default</LangVersion>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +29,10 @@
 
     <ItemGroup>
         <PackageReference Include="NVorbis" Version="0.10.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>
