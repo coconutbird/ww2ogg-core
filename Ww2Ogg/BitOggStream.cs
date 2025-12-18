@@ -1,4 +1,4 @@
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     Writes bits to an Ogg stream with proper page formatting

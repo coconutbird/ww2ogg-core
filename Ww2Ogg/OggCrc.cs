@@ -1,4 +1,4 @@
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     CRC-32 checksum for Ogg pages (from Tremor/lowmem)

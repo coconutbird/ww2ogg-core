@@ -1,10 +1,6 @@
-namespace WemConverter;
+namespace Ww2Ogg;
 
-public class WemException : Exception
-{
-    public WemException(string message) : base(message) { }
-    public WemException(string message, Exception inner) : base(message, inner) { }
-}
+public class WemException(string message) : Exception(message);
 
 public class FileOpenException(string fileName) : WemException($"Error opening {fileName}")
 {

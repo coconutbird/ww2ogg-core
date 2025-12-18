@@ -1,4 +1,4 @@
-namespace WemConverter;
+namespace Ww2Ogg;
 
 public enum ForcePacketFormat
 {

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     Helper methods from the Vorbis specification

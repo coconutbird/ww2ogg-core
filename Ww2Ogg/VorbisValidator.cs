@@ -1,6 +1,6 @@
 using NVorbis;
 
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     Validates Ogg Vorbis output by decoding with NVorbis

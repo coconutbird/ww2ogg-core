@@ -1,4 +1,4 @@
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     Reads individual bits (LSB first) from memory or a stream

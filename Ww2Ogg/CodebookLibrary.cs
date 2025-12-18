@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace WemConverter;
+namespace Ww2Ogg;
 
 /// <summary>
 ///     Loads and rebuilds Vorbis codebooks from packed binary data
