@@ -170,35 +170,25 @@ public static class Program
         bool fullSetup,
         ForcePacketFormat forcePacketFormat)
     {
-        // Try default codebook first
-        var defaultCodebooks = CodebookLibrary.FromEmbeddedResource(DefaultCodebook);
+        var codebookNames = new[] { DefaultCodebook, AoTuVCodebook };
 
-        try
+        foreach (var codebookName in codebookNames)
         {
-            ConvertFile(inputFile, outputFile, defaultCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
+            var codebook = CodebookLibrary.FromEmbeddedResource(codebookName);
 
-            return true;
+            try
+            {
+                ConvertFile(inputFile, outputFile, codebook, inlineCodebooks, fullSetup, forcePacketFormat);
+
+                return true;
+            }
+            catch (CodebookException ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+            }
         }
-        catch (CodebookException)
-        {
-            // Default codebook failed, try aoTuV
-        }
 
-        // Try aoTuV codebook
-        var aoTuVCodebooks = CodebookLibrary.FromEmbeddedResource(AoTuVCodebook);
-
-        try
-        {
-            ConvertFile(inputFile, outputFile, aoTuVCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
-
-            return true;
-        }
-        catch (CodebookException ex)
-        {
-            Console.Error.WriteLine($"Error: Failed with both codebooks. {ex.Message}");
-
-            return false;
-        }
+        return false;
     }
 
     private static void ConvertFile(

@@ -167,23 +167,9 @@ public class CodebookLibrary
         }
     }
 
-    // Helper methods will be added via str-replace-editor
-    private static int ILog(uint v)
-    {
-        var ret = 0;
-
-        while (v != 0)
-        {
-            ret++;
-            v >>= 1;
-        }
-
-        return ret;
-    }
-
     private static uint BookMapType1Quantvals(uint entries, uint dimensions)
     {
-        var bits = ILog(entries);
+        var bits = VorbisHelpers.ILog(entries);
         var vals = entries >> ((bits - 1) * ((int) dimensions - 1) / (int) dimensions);
 
         while (true)
@@ -229,7 +215,7 @@ public class CodebookLibrary
 
             while (currentEntry < entries)
             {
-                var numBits = ILog(entries - currentEntry);
+                var numBits = VorbisHelpers.ILog(entries - currentEntry);
                 var number = input.ReadBits(numBits);
                 output.WriteBits(number, numBits);
                 currentEntry += number;
@@ -318,7 +304,7 @@ public class CodebookLibrary
 
             while (currentEntry < entries)
             {
-                var numBits = ILog(entries - currentEntry);
+                var numBits = VorbisHelpers.ILog(entries - currentEntry);
                 var number = input.ReadBits(numBits);
                 output.WriteBits(number, numBits);
                 currentEntry += number;

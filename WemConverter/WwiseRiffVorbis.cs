@@ -76,7 +76,7 @@ public class WwiseRiffVorbis
         // Check RIFF header
         var riffHead = new byte[4];
         var waveHead = new byte[4];
-        _inputStream.Read(riffHead, 0, 4);
+        _inputStream.ReadExactly(riffHead, 0, 4);
 
         if (riffHead.AsSpan().SequenceEqual("RIFX"u8))
         {
@@ -98,7 +98,7 @@ public class WwiseRiffVorbis
             throw new ParseException("RIFF truncated");
         }
 
-        _inputStream.Read(waveHead, 0, 4);
+        _inputStream.ReadExactly(waveHead, 0, 4);
 
         if (!waveHead.AsSpan().SequenceEqual("WAVE"u8))
         {
@@ -330,7 +330,7 @@ public class WwiseRiffVorbis
     private uint ReadUInt32()
     {
         var buffer = new byte[4];
-        _inputStream.Read(buffer, 0, 4);
+        _inputStream.ReadExactly(buffer, 0, 4);
 
         return _littleEndian
             ? BitConverter.ToUInt32(buffer, 0)
@@ -340,7 +340,7 @@ public class WwiseRiffVorbis
     private ushort ReadUInt16()
     {
         var buffer = new byte[2];
-        _inputStream.Read(buffer, 0, 2);
+        _inputStream.ReadExactly(buffer, 0, 2);
 
         return _littleEndian
             ? BitConverter.ToUInt16(buffer, 0)
@@ -370,7 +370,7 @@ public class WwiseRiffVorbis
             }
 
             var chunkType = new byte[4];
-            _inputStream.Read(chunkType, 0, 4);
+            _inputStream.ReadExactly(chunkType, 0, 4);
             var chunkSize = ReadUInt32();
 
             if (chunkType.AsSpan().SequenceEqual("fmt "u8))
@@ -474,11 +474,11 @@ public class WwiseRiffVorbis
 
         if (_fmtSize == 0x28)
         {
-            var whoknowsbuf = new byte[16];
+            var unknown = new byte[16];
             byte[] expected = [1, 0, 0, 0, 0, 0, 0x10, 0, 0x80, 0, 0, 0xAA, 0, 0x38, 0x9b, 0x71];
-            _inputStream.Read(whoknowsbuf, 0, 16);
+            _inputStream.ReadExactly(unknown, 0, 16);
 
-            if (!whoknowsbuf.AsSpan().SequenceEqual(expected))
+            if (!unknown.AsSpan().SequenceEqual(expected))
             {
                 throw new ParseException("expected signature in extra fmt?");
             }
@@ -617,19 +617,6 @@ public class WwiseRiffVorbis
                 throw new ParseException("loops out of range");
             }
         }
-    }
-
-    private static int ILog(uint v)
-    {
-        var ret = 0;
-
-        while (v != 0)
-        {
-            ret++;
-            v >>= 1;
-        }
-
-        return ret;
     }
 
     private void GenerateOggHeader(BitOggStream ogg, out bool[] modeBlockflag, out int modeBits)
@@ -834,7 +821,7 @@ public class WwiseRiffVorbis
         ogg.WriteBits(modeCountLess1, 6);
 
         modeBlockflag = new bool[modeCount];
-        modeBits = ILog(modeCount - 1);
+        modeBits = VorbisHelpers.ILog(modeCount - 1);
 
         for (uint i = 0; i < modeCount; i++)
         {
@@ -1023,7 +1010,7 @@ public class WwiseRiffVorbis
             var couplingSteps = couplingStepsLess1 + 1;
             ogg.WriteBits(couplingStepsLess1, 8);
 
-            var couplingBits = ILog((uint) (_channels - 1));
+            var couplingBits = VorbisHelpers.ILog((uint) (_channels - 1));
 
             for (uint j = 0; j < couplingSteps; j++)
             {
@@ -1207,7 +1194,7 @@ internal class Packet
 
         if (noGranule)
         {
-            stream.Read(buffer, 0, 2);
+            stream.ReadExactly(buffer, 0, 2);
             Size = littleEndian
                 ? BitConverter.ToUInt16(buffer, 0)
                 : (ushort) ((buffer[0] << 8) | buffer[1]);
@@ -1217,7 +1204,7 @@ internal class Packet
         }
         else
         {
-            stream.Read(buffer, 0, 6);
+            stream.ReadExactly(buffer, 0, 6);
             Size = littleEndian
                 ? BitConverter.ToUInt16(buffer, 0)
                 : (ushort) ((buffer[0] << 8) | buffer[1]);
@@ -1249,7 +1236,7 @@ internal class Packet8
     {
         stream.Seek(offset, SeekOrigin.Begin);
         var buffer = new byte[8];
-        stream.Read(buffer, 0, 8);
+        stream.ReadExactly(buffer, 0, 8);
 
         if (littleEndian)
         {
