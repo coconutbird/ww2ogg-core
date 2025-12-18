@@ -12,4 +12,8 @@
       <EmbeddedResource Include="Codebooks\packed_codebooks_aoTuV_603.bin" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="NVorbis" Version="0.10.5" />
+    </ItemGroup>
+
 </Project>

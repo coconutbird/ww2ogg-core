@@ -116,52 +116,111 @@ public static class Program
 
         try
         {
-            // Load codebook library
-            CodebookLibrary codebooks;
+            if (codebookPath != null || inlineCodebooks || useAoTuV)
+            {
+                // User specified a codebook, use it directly
+                CodebookLibrary codebooks;
+                if (codebookPath != null)
+                {
+                    codebooks = new CodebookLibrary(codebookPath);
+                }
+                else if (inlineCodebooks)
+                {
+                    codebooks = new CodebookLibrary();
+                }
+                else
+                {
+                    codebooks = CodebookLibrary.FromEmbeddedResource(AoTuVCodebook);
+                }
 
-            if (codebookPath != null)
-            {
-                codebooks = new CodebookLibrary(codebookPath);
-            }
-            else if (inlineCodebooks)
-            {
-                codebooks = new CodebookLibrary();
+                ConvertFile(inputFile, outputFile, codebooks, inlineCodebooks, fullSetup, forcePacketFormat);
             }
             else
             {
-                string resourceName = useAoTuV ? AoTuVCodebook : DefaultCodebook;
-                codebooks = CodebookLibrary.FromEmbeddedResource(resourceName);
+                // Auto-detect: try default codebook first, then aoTuV
+                if (!TryConvertWithCodebooks(inputFile, outputFile, inlineCodebooks, fullSetup, forcePacketFormat))
+                {
+                    return 1;
+                }
             }
 
-            // Convert
-            using var inputStream = File.OpenRead(inputFile);
-            using var outputStream = File.Create(outputFile);
-
-            var converter = new WwiseRiffVorbis(
-                inputStream,
-                codebooks,
-                inlineCodebooks,
-                fullSetup,
-                forcePacketFormat);
-
-            converter.GenerateOgg(outputStream);
-
             Console.WriteLine($"Converted: {inputFile} -> {outputFile}");
-
             return 0;
         }
         catch (WemException ex)
         {
             Console.Error.WriteLine($"Error: {ex.Message}");
-
             return 1;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Unexpected error: {ex.Message}");
-
             return 1;
         }
+    }
+
+    private static bool TryConvertWithCodebooks(
+        string inputFile,
+        string outputFile,
+        bool inlineCodebooks,
+        bool fullSetup,
+        ForcePacketFormat forcePacketFormat)
+    {
+        // Try default codebook first
+        var defaultCodebooks = CodebookLibrary.FromEmbeddedResource(DefaultCodebook);
+        try
+        {
+            ConvertFile(inputFile, outputFile, defaultCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
+            return true;
+        }
+        catch (CodebookException)
+        {
+            // Default codebook failed, try aoTuV
+        }
+
+        // Try aoTuV codebook
+        var aoTuVCodebooks = CodebookLibrary.FromEmbeddedResource(AoTuVCodebook);
+        try
+        {
+            ConvertFile(inputFile, outputFile, aoTuVCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
+            return true;
+        }
+        catch (CodebookException ex)
+        {
+            Console.Error.WriteLine($"Error: Failed with both codebooks. {ex.Message}");
+            return false;
+        }
+    }
+
+    private static void ConvertFile(
+        string inputFile,
+        string outputFile,
+        CodebookLibrary codebooks,
+        bool inlineCodebooks,
+        bool fullSetup,
+        ForcePacketFormat forcePacketFormat)
+    {
+        using var inputStream = File.OpenRead(inputFile);
+
+        // Convert to memory first for validation
+        using var memoryStream = new MemoryStream();
+
+        var converter = new WwiseRiffVorbis(
+            inputStream,
+            codebooks,
+            inlineCodebooks,
+            fullSetup,
+            forcePacketFormat);
+
+        converter.GenerateOgg(memoryStream);
+
+        // Validate the output
+        VorbisValidator.Validate(memoryStream);
+
+        // Write to file
+        memoryStream.Position = 0;
+        using var outputStream = File.Create(outputFile);
+        memoryStream.CopyTo(outputStream);
     }
 
     private static void PrintUsage()
@@ -179,5 +238,7 @@ public static class Program
         Console.WriteLine("  --mod-packets          Force modified Vorbis packets");
         Console.WriteLine("  --no-mod-packets       Force standard Vorbis packets");
         Console.WriteLine("  -h, --help             Show this help");
+        Console.WriteLine();
+        Console.WriteLine("Note: If no codebook is specified, auto-detection is used (tries default, then aoTuV).");
     }
 }

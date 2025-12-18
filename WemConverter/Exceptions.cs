@@ -22,25 +22,30 @@ public class ParseException : WemException
     public ParseException(string message) : base($"Parse error: {message}") { }
 }
 
-public class SizeMismatchException : ParseException
+public class SizeMismatchException : CodebookException
 {
     public long ExpectedSize { get; }
     public long ActualSize { get; }
-    
-    public SizeMismatchException(long expected, long actual) 
-        : base($"expected {expected} bits, read {actual}")
+
+    public SizeMismatchException(long expected, long actual)
+        : base($"Parse error: expected {expected} bytes, read {actual} - likely wrong codebook")
     {
         ExpectedSize = expected;
         ActualSize = actual;
     }
 }
 
-public class InvalidCodebookIdException : ParseException
+public class CodebookException : WemException
+{
+    public CodebookException(string message) : base(message) { }
+}
+
+public class InvalidCodebookIdException : CodebookException
 {
     public int CodebookId { get; }
-    
-    public InvalidCodebookIdException(int id) 
-        : base($"invalid codebook id {id}, try --inline-codebooks")
+
+    public InvalidCodebookIdException(int id)
+        : base($"Parse error: invalid codebook id {id}, try --inline-codebooks")
     {
         CodebookId = id;
     }

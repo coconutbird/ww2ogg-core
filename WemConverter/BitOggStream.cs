@@ -3,34 +3,20 @@ namespace WemConverter;
 /// <summary>
 /// Writes bits to an Ogg stream with proper page formatting
 /// </summary>
-public class BitOggStream : IDisposable
+public class BitOggStream(Stream outputStream) : IDisposable
 {
     private const int HeaderBytes = 27;
     private const int MaxSegments = 255;
     private const int SegmentSize = 255;
 
-    private readonly Stream _outputStream;
     private byte _bitBuffer;
     private int _bitsStored;
     private int _payloadBytes;
-    private bool _first;
+    private bool _first = true;
     private bool _continued;
-    private readonly byte[] _pageBuffer;
+    private readonly byte[] _pageBuffer = new byte[HeaderBytes + MaxSegments + SegmentSize * MaxSegments];
     private ulong _granule;
     private uint _seqNo;
-
-    public BitOggStream(Stream outputStream)
-    {
-        _outputStream = outputStream;
-        _bitBuffer = 0;
-        _bitsStored = 0;
-        _payloadBytes = 0;
-        _first = true;
-        _continued = false;
-        _pageBuffer = new byte[HeaderBytes + MaxSegments + SegmentSize * MaxSegments];
-        _granule = 0;
-        _seqNo = 0;
-    }
 
     public void SetGranule(ulong granule)
     {
@@ -39,10 +25,10 @@ public class BitOggStream : IDisposable
 
     public void WriteBit(bool bit)
     {
-        if (bit)
-            _bitBuffer |= (byte)(1 << _bitsStored);
+        if (bit) _bitBuffer |= (byte) (1 << _bitsStored);
 
         _bitsStored++;
+
         if (_bitsStored == 8)
         {
             FlushBits();
@@ -93,31 +79,31 @@ public class BitOggStream : IDisposable
             }
 
             // OggS header
-            _pageBuffer[0] = (byte)'O';
-            _pageBuffer[1] = (byte)'g';
-            _pageBuffer[2] = (byte)'g';
-            _pageBuffer[3] = (byte)'S';
+            _pageBuffer[0] = (byte) 'O';
+            _pageBuffer[1] = (byte) 'g';
+            _pageBuffer[2] = (byte) 'g';
+            _pageBuffer[3] = (byte) 'S';
             _pageBuffer[4] = 0; // stream_structure_version
-            _pageBuffer[5] = (byte)((_continued ? 1 : 0) | (_first ? 2 : 0) | (last ? 4 : 0));
-            
+            _pageBuffer[5] = (byte) ((_continued ? 1 : 0) | (_first ? 2 : 0) | (last ? 4 : 0));
+
             // Granule position (64-bit)
-            WriteUInt32LE(_pageBuffer, 6, (uint)(_granule & 0xFFFFFFFF));
-            WriteUInt32LE(_pageBuffer, 10, (uint)(_granule >> 32));
-            
+            WriteUint64Le(_pageBuffer, 6, _granule);
+
             // Stream serial number
-            WriteUInt32LE(_pageBuffer, 14, 1);
-            
+            WriteUInt32Le(_pageBuffer, 14, 1);
+
             // Page sequence number
-            WriteUInt32LE(_pageBuffer, 18, _seqNo);
-            
+            WriteUInt32Le(_pageBuffer, 18, _seqNo);
+
             // Checksum (0 for now, will be computed)
-            WriteUInt32LE(_pageBuffer, 22, 0);
-            
+            WriteUInt32Le(_pageBuffer, 22, 0);
+
             // Segment count
-            _pageBuffer[26] = (byte)segments;
+            _pageBuffer[26] = (byte) segments;
 
             // Lacing values
             int bytesLeft = _payloadBytes;
+
             for (int i = 0; i < segments; i++)
             {
                 if (bytesLeft >= SegmentSize)
@@ -127,17 +113,17 @@ public class BitOggStream : IDisposable
                 }
                 else
                 {
-                    _pageBuffer[27 + i] = (byte)bytesLeft;
+                    _pageBuffer[27 + i] = (byte) bytesLeft;
                 }
             }
 
             // Compute and write checksum
             int totalSize = HeaderBytes + segments + _payloadBytes;
             uint checksum = OggCrc.Compute(_pageBuffer, totalSize);
-            WriteUInt32LE(_pageBuffer, 22, checksum);
+            WriteUInt32Le(_pageBuffer, 22, checksum);
 
             // Write to output
-            _outputStream.Write(_pageBuffer, 0, totalSize);
+            outputStream.Write(_pageBuffer, 0, totalSize);
 
             _seqNo++;
             _first = false;
@@ -146,12 +132,18 @@ public class BitOggStream : IDisposable
         }
     }
 
-    private static void WriteUInt32LE(byte[] buffer, int offset, uint value)
+    private static void WriteUInt32Le(byte[] buffer, int offset, uint value)
     {
-        buffer[offset] = (byte)(value & 0xFF);
-        buffer[offset + 1] = (byte)((value >> 8) & 0xFF);
-        buffer[offset + 2] = (byte)((value >> 16) & 0xFF);
-        buffer[offset + 3] = (byte)((value >> 24) & 0xFF);
+        buffer[offset] = (byte) (value & 0xFF);
+        buffer[offset + 1] = (byte) ((value >> 8) & 0xFF);
+        buffer[offset + 2] = (byte) ((value >> 16) & 0xFF);
+        buffer[offset + 3] = (byte) ((value >> 24) & 0xFF);
+    }
+
+    private static void WriteUint64Le(byte[] buffer, int offset, ulong value)
+    {
+        WriteUInt32Le(buffer, offset, (uint) (value & 0xFFFFFFFF));
+        WriteUInt32Le(buffer, offset + 4, (uint) (value >> 32));
     }
 
     public void Dispose()
@@ -159,4 +151,3 @@ public class BitOggStream : IDisposable
         FlushPage();
     }
 }
-
