@@ -16,7 +16,7 @@ public class BitOggStream : IDisposable
     private bool _first;
     private bool _continued;
     private readonly byte[] _pageBuffer;
-    private uint _granule;
+    private ulong _granule;
     private uint _seqNo;
 
     public BitOggStream(Stream outputStream)
@@ -32,7 +32,7 @@ public class BitOggStream : IDisposable
         _seqNo = 0;
     }
 
-    public void SetGranule(uint granule)
+    public void SetGranule(ulong granule)
     {
         _granule = granule;
     }
@@ -101,8 +101,8 @@ public class BitOggStream : IDisposable
             _pageBuffer[5] = (byte)((_continued ? 1 : 0) | (_first ? 2 : 0) | (last ? 4 : 0));
             
             // Granule position (64-bit)
-            WriteUInt32LE(_pageBuffer, 6, _granule);
-            WriteUInt32LE(_pageBuffer, 10, _granule == 0xFFFFFFFF ? 0xFFFFFFFF : 0);
+            WriteUInt32LE(_pageBuffer, 6, (uint)(_granule & 0xFFFFFFFF));
+            WriteUInt32LE(_pageBuffer, 10, (uint)(_granule >> 32));
             
             // Stream serial number
             WriteUInt32LE(_pageBuffer, 14, 1);

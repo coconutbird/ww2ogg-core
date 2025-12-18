@@ -367,6 +367,13 @@ public class WwiseRiffVorbis
             GenerateOggHeader(ogg, out modeBlockflag, out modeBits);
         }
 
+        // For granule calculation
+        uint blocksize0 = 1u << _blocksize0Pow;
+        uint blocksize1 = 1u << _blocksize1Pow;
+        long granulePos = 0;
+        uint prevBlocksize = 0;
+        bool firstPacket = true;
+
         // Audio pages
         long offset = _dataOffset + _firstAudioPacketOffset;
         while (offset < _dataOffset + _dataSize)
@@ -402,7 +409,75 @@ public class WwiseRiffVorbis
             offset = packetPayloadOffset;
             _inputStream.Seek(offset, SeekOrigin.Begin);
 
-            ogg.SetGranule(granule == 0xFFFFFFFF ? 1 : granule);
+            // Determine granule for this page
+            bool isLastPacket = nextOffset >= _dataOffset + _dataSize;
+
+            if (_noGranule)
+            {
+                // Calculate granule from block sizes
+                // First, peek at the mode number to determine block size
+                uint currBlocksize;
+                if (modeBlockflag != null && modeBits > 0 && size > 0)
+                {
+                    // Read mode number from first byte
+                    int firstByte = _inputStream.ReadByte();
+                    _inputStream.Seek(offset, SeekOrigin.Begin); // Seek back
+
+                    uint modeNumber;
+                    if (_modPackets)
+                    {
+                        // Mode number is in the first modeBits bits
+                        modeNumber = (uint)(firstByte & ((1 << modeBits) - 1));
+                    }
+                    else
+                    {
+                        // Standard Vorbis: skip packet type bit (always 0 for audio)
+                        modeNumber = (uint)((firstByte >> 1) & ((1 << modeBits) - 1));
+                    }
+
+                    if (modeNumber < modeBlockflag.Length)
+                    {
+                        currBlocksize = modeBlockflag[modeNumber] ? blocksize1 : blocksize0;
+                    }
+                    else
+                    {
+                        currBlocksize = blocksize0; // Fallback
+                    }
+                }
+                else
+                {
+                    currBlocksize = blocksize0; // Fallback
+                }
+
+                // Calculate samples for this packet
+                if (firstPacket)
+                {
+                    // First packet produces no audio (priming)
+                    firstPacket = false;
+                }
+                else
+                {
+                    // Samples = (prev_blocksize + curr_blocksize) / 4
+                    granulePos += (prevBlocksize + currBlocksize) / 4;
+                }
+
+                prevBlocksize = currBlocksize;
+
+                // Use calculated granule, but for last packet use sample_count if available
+                if (isLastPacket && _sampleCount > 0)
+                {
+                    ogg.SetGranule(_sampleCount);
+                }
+                else
+                {
+                    ogg.SetGranule((ulong)granulePos);
+                }
+            }
+            else
+            {
+                // Use granule from packet
+                ogg.SetGranule(granule == 0xFFFFFFFF ? 1 : granule);
+            }
 
             // First byte handling
             if (_modPackets)
