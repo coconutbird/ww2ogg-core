@@ -1,10 +1,9 @@
-﻿namespace Ww2Ogg;
+﻿using Ww2Ogg.Core;
+
+namespace Ww2Ogg;
 
 public static class Program
 {
-    private const string DefaultCodebook = "WemConverter.Codebooks.packed_codebooks.bin";
-    private const string AoTuVCodebook = "WemConverter.Codebooks.packed_codebooks_aoTuV_603.bin";
-
     public static int Main(string[] args)
     {
         if (args.Length == 0)
@@ -131,7 +130,7 @@ public static class Program
                 }
                 else
                 {
-                    codebooks = CodebookLibrary.FromEmbeddedResource(AoTuVCodebook);
+                    codebooks = CodebookLibrary.AoTuV;
                 }
 
                 ConvertFile(inputFile, outputFile, codebooks, inlineCodebooks, fullSetup, forcePacketFormat);
@@ -170,12 +169,10 @@ public static class Program
         bool fullSetup,
         ForcePacketFormat forcePacketFormat)
     {
-        var codebookNames = new[] { DefaultCodebook, AoTuVCodebook };
+        var codebooks = new[] { CodebookLibrary.Default, CodebookLibrary.AoTuV };
 
-        foreach (var codebookName in codebookNames)
+        foreach (var codebook in codebooks)
         {
-            var codebook = CodebookLibrary.FromEmbeddedResource(codebookName);
-
             try
             {
                 ConvertFile(inputFile, outputFile, codebook, inlineCodebooks, fullSetup, forcePacketFormat);

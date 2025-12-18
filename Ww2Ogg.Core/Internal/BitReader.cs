@@ -1,9 +1,9 @@
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core.Internal;
 
 /// <summary>
 ///     Reads individual bits (LSB first) from memory or a stream
 /// </summary>
-public class BitReader
+internal sealed class BitReader
 {
     private readonly ReadOnlyMemory<byte> _memory;
     private readonly Stream? _stream;

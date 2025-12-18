@@ -1,13 +1,18 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace Ww2Ogg;
+using Ww2Ogg.Core.Internal;
+
+namespace Ww2Ogg.Core;
 
 /// <summary>
 ///     Loads and rebuilds Vorbis codebooks from packed binary data
 /// </summary>
-public class CodebookLibrary
+public sealed class CodebookLibrary
 {
+    private const string DefaultCodebookResource = "Ww2Ogg.Core.Internal.Codebooks.packed_codebooks.bin";
+    private const string AoTuVCodebookResource = "Ww2Ogg.Core.Internal.Codebooks.packed_codebooks_aoTuV_603.bin";
+
     private static readonly ConcurrentDictionary<string, CodebookLibrary> Cache = new();
     private readonly int _codebookCount;
 
@@ -44,9 +49,19 @@ public class CodebookLibrary
     }
 
     /// <summary>
+    ///     Gets the default packed codebooks library (cached)
+    /// </summary>
+    public static CodebookLibrary Default => FromEmbeddedResource(DefaultCodebookResource);
+
+    /// <summary>
+    ///     Gets the aoTuV 6.03 packed codebooks library (cached)
+    /// </summary>
+    public static CodebookLibrary AoTuV => FromEmbeddedResource(AoTuVCodebookResource);
+
+    /// <summary>
     ///     Loads codebook library from embedded resource (cached)
     /// </summary>
-    public static CodebookLibrary FromEmbeddedResource(string resourceName)
+    internal static CodebookLibrary FromEmbeddedResource(string resourceName)
     {
         return Cache.GetOrAdd(
             resourceName,
@@ -63,7 +78,7 @@ public class CodebookLibrary
             });
     }
 
-    public ReadOnlyMemory<byte> GetCodebook(int index)
+    internal ReadOnlyMemory<byte> GetCodebook(int index)
     {
         if (_codebookData == null || _codebookOffsets == null)
         {
@@ -81,7 +96,7 @@ public class CodebookLibrary
         return new ReadOnlyMemory<byte>(_codebookData, start, length);
     }
 
-    public int GetCodebookSize(int index)
+    internal int GetCodebookSize(int index)
     {
         if (_codebookData == null || _codebookOffsets == null)
         {
@@ -99,7 +114,7 @@ public class CodebookLibrary
     /// <summary>
     ///     Rebuild codebook from library by index
     /// </summary>
-    public void Rebuild(int index, BitOggStream output)
+    internal void Rebuild(int index, BitOggStream output)
     {
         var codebook = GetCodebook(index);
         var reader = new BitReader(codebook);
@@ -109,7 +124,7 @@ public class CodebookLibrary
     /// <summary>
     ///     Copy codebook directly (for inline/full setup)
     /// </summary>
-    public void Copy(BitReader input, BitOggStream output)
+    internal void Copy(BitReader input, BitOggStream output)
     {
         // IN: 24 bit identifier, 16 bit dimensions, 24 bit entry count
         var id = input.ReadBits(24);
@@ -132,7 +147,7 @@ public class CodebookLibrary
     /// <summary>
     ///     Rebuild codebook from stripped format
     /// </summary>
-    public void Rebuild(BitReader input, uint codebookSize, BitOggStream output)
+    internal void Rebuild(BitReader input, uint codebookSize, BitOggStream output)
     {
         // IN: 4 bit dimensions, 14 bit entry count
         var dimensions = input.ReadBits(4);

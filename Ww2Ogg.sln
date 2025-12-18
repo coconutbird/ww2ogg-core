@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ww2Ogg", "Ww2Ogg\Ww2Ogg.csproj", "{A2EB0AD6-0D53-4F5C-9C60-521CA8D55CE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ww2Ogg.Core", "Ww2Ogg.Core\Ww2Ogg.Core.csproj", "{DD99F90A-21D4-4673-BC27-137A76A72FE6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{A2EB0AD6-0D53-4F5C-9C60-521CA8D55CE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2EB0AD6-0D53-4F5C-9C60-521CA8D55CE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2EB0AD6-0D53-4F5C-9C60-521CA8D55CE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD99F90A-21D4-4673-BC27-137A76A72FE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD99F90A-21D4-4673-BC27-137A76A72FE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD99F90A-21D4-4673-BC27-137A76A72FE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD99F90A-21D4-4673-BC27-137A76A72FE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

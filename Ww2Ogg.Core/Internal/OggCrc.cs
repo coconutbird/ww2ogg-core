@@ -1,9 +1,9 @@
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core.Internal;
 
 /// <summary>
 ///     CRC-32 checksum for Ogg pages (from Tremor/lowmem)
 /// </summary>
-public static class OggCrc
+internal static class OggCrc
 {
     private static readonly uint[] CrcLookup =
     [

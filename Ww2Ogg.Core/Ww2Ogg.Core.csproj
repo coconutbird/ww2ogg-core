@@ -1,19 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="NVorbis" Version="0.10.5"/>
+        <EmbeddedResource Include="Internal\Codebooks\packed_codebooks.bin"/>
+        <EmbeddedResource Include="Internal\Codebooks\packed_codebooks_aoTuV_603.bin"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Ww2Ogg.Core\Ww2Ogg.Core.csproj"/>
+        <PackageReference Include="NVorbis" Version="0.10.5"/>
     </ItemGroup>
 
 </Project>

@@ -1,9 +1,9 @@
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core.Internal;
 
 /// <summary>
 ///     Writes bits to an Ogg stream with proper page formatting
 /// </summary>
-public class BitOggStream(Stream outputStream) : IDisposable
+internal sealed class BitOggStream(Stream outputStream) : IDisposable
 {
     private const int HeaderBytes = 27;
     private const int MaxSegments = 255;

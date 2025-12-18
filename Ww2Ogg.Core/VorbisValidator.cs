@@ -1,6 +1,6 @@
 using NVorbis;
 
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core;
 
 /// <summary>
 ///     Validates Ogg Vorbis output by decoding with NVorbis

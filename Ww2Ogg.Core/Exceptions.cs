@@ -1,4 +1,4 @@
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core;
 
 public class WemException(string message) : Exception(message);
 

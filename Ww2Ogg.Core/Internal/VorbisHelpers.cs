@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Ww2Ogg;
+namespace Ww2Ogg.Core.Internal;
 
 /// <summary>
 ///     Helper methods from the Vorbis specification

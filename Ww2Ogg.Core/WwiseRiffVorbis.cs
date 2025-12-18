@@ -1,4 +1,6 @@
-namespace Ww2Ogg;
+using Ww2Ogg.Core.Internal;
+
+namespace Ww2Ogg.Core;
 
 public enum ForcePacketFormat
 {
@@ -10,7 +12,7 @@ public enum ForcePacketFormat
 /// <summary>
 ///     Converts Wwise RIFF/RIFX Vorbis to standard Ogg Vorbis
 /// </summary>
-public class WwiseRiffVorbis
+public sealed class WwiseRiffVorbis
 {
     private const string Version = "0.24";
     private static readonly byte[] VorbisBytes = "vorbis"u8.ToArray();
