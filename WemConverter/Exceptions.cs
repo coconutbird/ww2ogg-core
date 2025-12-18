@@ -8,13 +8,13 @@ public class WemException : Exception
 
 public class FileOpenException : WemException
 {
-    public string FileName { get; }
-    
-    public FileOpenException(string fileName) 
+    public FileOpenException(string fileName)
         : base($"Error opening {fileName}")
     {
         FileName = fileName;
     }
+
+    public string FileName { get; }
 }
 
 public class ParseException : WemException
@@ -24,15 +24,15 @@ public class ParseException : WemException
 
 public class SizeMismatchException : CodebookException
 {
-    public long ExpectedSize { get; }
-    public long ActualSize { get; }
-
     public SizeMismatchException(long expected, long actual)
         : base($"Parse error: expected {expected} bytes, read {actual} - likely wrong codebook")
     {
         ExpectedSize = expected;
         ActualSize = actual;
     }
+
+    public long ExpectedSize { get; }
+    public long ActualSize { get; }
 }
 
 public class CodebookException : WemException
@@ -42,12 +42,11 @@ public class CodebookException : WemException
 
 public class InvalidCodebookIdException : CodebookException
 {
-    public int CodebookId { get; }
-
     public InvalidCodebookIdException(int id)
         : base($"Parse error: invalid codebook id {id}, try --inline-codebooks")
     {
         CodebookId = id;
     }
-}
 
+    public int CodebookId { get; }
+}

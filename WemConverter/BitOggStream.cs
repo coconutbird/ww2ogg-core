@@ -1,22 +1,27 @@
 namespace WemConverter;
 
 /// <summary>
-/// Writes bits to an Ogg stream with proper page formatting
+///     Writes bits to an Ogg stream with proper page formatting
 /// </summary>
 public class BitOggStream(Stream outputStream) : IDisposable
 {
     private const int HeaderBytes = 27;
     private const int MaxSegments = 255;
     private const int SegmentSize = 255;
+    private readonly byte[] _pageBuffer = new byte[HeaderBytes + MaxSegments + SegmentSize * MaxSegments];
 
     private byte _bitBuffer;
     private int _bitsStored;
-    private int _payloadBytes;
-    private bool _first = true;
     private bool _continued;
-    private readonly byte[] _pageBuffer = new byte[HeaderBytes + MaxSegments + SegmentSize * MaxSegments];
+    private bool _first = true;
     private ulong _granule;
+    private int _payloadBytes;
     private uint _seqNo;
+
+    public void Dispose()
+    {
+        FlushPage();
+    }
 
     public void SetGranule(ulong granule)
     {
@@ -37,7 +42,7 @@ public class BitOggStream(Stream outputStream) : IDisposable
 
     public void WriteBits(uint value, int count)
     {
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             WriteBit((value & (1u << i)) != 0);
         }
@@ -69,11 +74,11 @@ public class BitOggStream(Stream outputStream) : IDisposable
 
         if (_payloadBytes != 0)
         {
-            int segments = (_payloadBytes + SegmentSize) / SegmentSize;
+            var segments = (_payloadBytes + SegmentSize) / SegmentSize;
             if (segments == MaxSegments + 1) segments = MaxSegments;
 
             // Move payload back
-            for (int i = 0; i < _payloadBytes; i++)
+            for (var i = 0; i < _payloadBytes; i++)
             {
                 _pageBuffer[HeaderBytes + segments + i] = _pageBuffer[HeaderBytes + MaxSegments + i];
             }
@@ -102,9 +107,9 @@ public class BitOggStream(Stream outputStream) : IDisposable
             _pageBuffer[26] = (byte) segments;
 
             // Lacing values
-            int bytesLeft = _payloadBytes;
+            var bytesLeft = _payloadBytes;
 
-            for (int i = 0; i < segments; i++)
+            for (var i = 0; i < segments; i++)
             {
                 if (bytesLeft >= SegmentSize)
                 {
@@ -118,8 +123,8 @@ public class BitOggStream(Stream outputStream) : IDisposable
             }
 
             // Compute and write checksum
-            int totalSize = HeaderBytes + segments + _payloadBytes;
-            uint checksum = OggCrc.Compute(_pageBuffer, totalSize);
+            var totalSize = HeaderBytes + segments + _payloadBytes;
+            var checksum = OggCrc.Compute(_pageBuffer, totalSize);
             WriteUInt32Le(_pageBuffer, 22, checksum);
 
             // Write to output
@@ -144,10 +149,5 @@ public class BitOggStream(Stream outputStream) : IDisposable
     {
         WriteUInt32Le(buffer, offset, (uint) (value & 0xFFFFFFFF));
         WriteUInt32Le(buffer, offset + 4, (uint) (value >> 32));
-    }
-
-    public void Dispose()
-    {
-        FlushPage();
     }
 }

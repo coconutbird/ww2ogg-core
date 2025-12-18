@@ -17,13 +17,13 @@ public static class Program
         string? inputFile = null;
         string? outputFile = null;
         string? codebookPath = null;
-        bool useAoTuV = false;
-        bool inlineCodebooks = false;
-        bool fullSetup = false;
+        var useAoTuV = false;
+        var inlineCodebooks = false;
+        var fullSetup = false;
         var forcePacketFormat = ForcePacketFormat.NoForce;
 
         // Parse arguments
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
@@ -120,6 +120,7 @@ public static class Program
             {
                 // User specified a codebook, use it directly
                 CodebookLibrary codebooks;
+
                 if (codebookPath != null)
                 {
                     codebooks = new CodebookLibrary(codebookPath);
@@ -145,16 +146,19 @@ public static class Program
             }
 
             Console.WriteLine($"Converted: {inputFile} -> {outputFile}");
+
             return 0;
         }
         catch (WemException ex)
         {
             Console.Error.WriteLine($"Error: {ex.Message}");
+
             return 1;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Unexpected error: {ex.Message}");
+
             return 1;
         }
     }
@@ -168,9 +172,11 @@ public static class Program
     {
         // Try default codebook first
         var defaultCodebooks = CodebookLibrary.FromEmbeddedResource(DefaultCodebook);
+
         try
         {
             ConvertFile(inputFile, outputFile, defaultCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
+
             return true;
         }
         catch (CodebookException)
@@ -180,14 +186,17 @@ public static class Program
 
         // Try aoTuV codebook
         var aoTuVCodebooks = CodebookLibrary.FromEmbeddedResource(AoTuVCodebook);
+
         try
         {
             ConvertFile(inputFile, outputFile, aoTuVCodebooks, inlineCodebooks, fullSetup, forcePacketFormat);
+
             return true;
         }
         catch (CodebookException ex)
         {
             Console.Error.WriteLine($"Error: Failed with both codebooks. {ex.Message}");
+
             return false;
         }
     }
