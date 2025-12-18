@@ -63,7 +63,7 @@ public class CodebookLibrary
             });
     }
 
-    public ReadOnlySpan<byte> GetCodebook(int index)
+    public ReadOnlyMemory<byte> GetCodebook(int index)
     {
         if (_codebookData == null || _codebookOffsets == null)
         {
@@ -78,7 +78,7 @@ public class CodebookLibrary
         var start = _codebookOffsets[index];
         var length = _codebookOffsets[index + 1] - start;
 
-        return new ReadOnlySpan<byte>(_codebookData, start, length);
+        return new ReadOnlyMemory<byte>(_codebookData, start, length);
     }
 
     public int GetCodebookSize(int index)
@@ -102,8 +102,7 @@ public class CodebookLibrary
     public void Rebuild(int index, BitOggStream output)
     {
         var codebook = GetCodebook(index);
-        using var ms = new MemoryStream(codebook.ToArray());
-        var reader = new BitReader(ms);
+        var reader = new BitReader(codebook);
         Rebuild(reader, (uint) codebook.Length, output);
     }
 

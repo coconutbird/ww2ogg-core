@@ -1,43 +1,72 @@
 namespace WemConverter;
 
 /// <summary>
-///     Reads individual bits from a stream (LSB first)
+///     Reads individual bits (LSB first) from memory or a stream
 /// </summary>
 public class BitReader
 {
-    private readonly Stream _stream;
-    private byte _bitBuffer;
-    private int _bitsLeft;
+    private readonly ReadOnlyMemory<byte> _memory;
+    private readonly Stream? _stream;
+    private int _bitPos;
+    private int _bytePos;
+    private byte _currentByte;
+
+    public BitReader(ReadOnlyMemory<byte> data)
+    {
+        _memory = data;
+        _stream = null;
+        _bytePos = 0;
+        _bitPos = 0;
+    }
 
     public BitReader(Stream stream)
     {
+        _memory = ReadOnlyMemory<byte>.Empty;
         _stream = stream;
-        _bitBuffer = 0;
-        _bitsLeft = 0;
-        TotalBitsRead = 0;
+        _bytePos = 0;
+        _bitPos = 0;
     }
 
-    public long TotalBitsRead { get; private set; }
+    public long TotalBitsRead => _bytePos * 8L + _bitPos;
 
     public bool ReadBit()
     {
-        if (_bitsLeft == 0)
+        if (_bitPos == 0)
         {
-            var c = _stream.ReadByte();
-
-            if (c < 0)
+            if (_stream == null)
             {
-                throw new EndOfStreamException("Out of bits");
-            }
+                var span = _memory.Span;
 
-            _bitBuffer = (byte) c;
-            _bitsLeft = 8;
+                if (_bytePos >= span.Length)
+                {
+                    throw new EndOfStreamException("Out of bits");
+                }
+
+                _currentByte = span[_bytePos];
+            }
+            else
+            {
+                var b = _stream.ReadByte();
+
+                if (b < 0)
+                {
+                    throw new EndOfStreamException("Out of bits");
+                }
+
+                _currentByte = (byte) b;
+            }
         }
 
-        TotalBitsRead++;
-        _bitsLeft--;
+        var bit = (_currentByte & (1 << _bitPos)) != 0;
+        _bitPos++;
 
-        return (_bitBuffer & (0x80 >> _bitsLeft)) != 0;
+        if (_bitPos == 8)
+        {
+            _bitPos = 0;
+            _bytePos++;
+        }
+
+        return bit;
     }
 
     public uint ReadBits(int count)

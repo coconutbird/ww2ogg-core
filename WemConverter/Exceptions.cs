@@ -6,47 +6,24 @@ public class WemException : Exception
     public WemException(string message, Exception inner) : base(message, inner) { }
 }
 
-public class FileOpenException : WemException
+public class FileOpenException(string fileName) : WemException($"Error opening {fileName}")
 {
-    public FileOpenException(string fileName)
-        : base($"Error opening {fileName}")
-    {
-        FileName = fileName;
-    }
-
-    public string FileName { get; }
+    public string FileName { get; } = fileName;
 }
 
-public class ParseException : WemException
+public class ParseException(string message) : WemException($"Parse error: {message}");
+
+public class SizeMismatchException(long expected, long actual) : CodebookException(
+    $"Parse error: expected {expected} bytes, read {actual} - likely wrong codebook")
 {
-    public ParseException(string message) : base($"Parse error: {message}") { }
+    public long ExpectedSize { get; } = expected;
+    public long ActualSize { get; } = actual;
 }
 
-public class SizeMismatchException : CodebookException
+public class CodebookException(string message) : WemException(message);
+
+public class InvalidCodebookIdException(int id)
+    : CodebookException($"Parse error: invalid codebook id {id}, try --inline-codebooks")
 {
-    public SizeMismatchException(long expected, long actual)
-        : base($"Parse error: expected {expected} bytes, read {actual} - likely wrong codebook")
-    {
-        ExpectedSize = expected;
-        ActualSize = actual;
-    }
-
-    public long ExpectedSize { get; }
-    public long ActualSize { get; }
-}
-
-public class CodebookException : WemException
-{
-    public CodebookException(string message) : base(message) { }
-}
-
-public class InvalidCodebookIdException : CodebookException
-{
-    public InvalidCodebookIdException(int id)
-        : base($"Parse error: invalid codebook id {id}, try --inline-codebooks")
-    {
-        CodebookId = id;
-    }
-
-    public int CodebookId { get; }
+    public int CodebookId { get; } = id;
 }
